@@ -27,8 +27,10 @@ router.post("/distribute", async (req, res) => {
     const cooldownMap = {
       "Water Supplies": 2 * 60 * 60 * 1000, // 2 hours
       "Food Package": 6 * 60 * 60 * 1000, // 6 hours
-      Shelter: 24 * 60 * 60 * 1000, // 24 hours
-      "Medical Aid": 12 * 60 * 60 * 1000, // 12 hours
+      "Emergency Shelter": 24 * 60 * 60 * 1000, // 24 hours
+      "Medical Kit": 12 * 60 * 60 * 1000, // 12 hours
+      "Clothing": 24 * 60 * 60 * 1000, // 24 hours
+      "Hygiene Kit": 24 * 60 * 60 * 1000, // 24 hours
     };
 
     const now = new Date();
@@ -62,8 +64,8 @@ router.post("/distribute", async (req, res) => {
     if (blockedItems.length > 0) {
       await AuditLog.create({
         beneficiaryQR: qrId,
-        action: "Cooldown Block",
-        message: `Blocked items: ${blockedItems.join(", ")}`,
+        action: "Duplicate Aid Blocked",
+        message: `Blocked Items: ${blockedItems.join(", ")} for QR: ${qrId} in ${region || "Unknown Zone"}. System automatically enforced cooldown protocol.`,
       });
 
       return res.status(400).json({

@@ -46,26 +46,34 @@ function checkAuthAndInjectUI() {
     }
 
     // Role-based rendering
-    const nav = document.querySelector('.sidebar-nav');
-    if (nav) {
-        if (role && role.toLowerCase() === 'admin') {
-            const adminLink = document.createElement('a');
-            adminLink.href = 'admin.html';
-            adminLink.className = 'nav-link';
-            adminLink.style.borderColor = 'var(--primary)';
-            adminLink.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Analytics (Admin)`;
-            nav.appendChild(adminLink);
-        }
-
-        const logoutLink = document.createElement('a');
-        logoutLink.href = '#';
-        logoutLink.className = 'nav-link';
-        logoutLink.style.marginTop = 'auto'; // push bottom if flex-col
-        logoutLink.style.color = 'var(--danger)';
-        logoutLink.onclick = logout;
-        logoutLink.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout`;
-        nav.appendChild(logoutLink);
+    const sidebar = document.querySelector(".sidebar");
+    const nav = document.querySelector(".sidebar-nav");
+    
+    if (nav && role && role.toLowerCase() === "admin") {
+      const adminLink = document.createElement("a");
+      adminLink.href = "admin.html";
+      adminLink.className = "nav-link";
+      adminLink.style.borderColor = "var(--primary)";
+      adminLink.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Analytics (Admin)`;
+      nav.appendChild(adminLink);
     }
+
+    if (sidebar) {
+      const logoutLink = document.createElement("a");
+      logoutLink.href = "#";
+      logoutLink.className = "nav-link";
+      logoutLink.style.color = "var(--danger)";
+      logoutLink.onclick = logout;
+      logoutLink.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout`;
+
+      let footer = sidebar.querySelector(".sidebar-footer");
+      if (!footer) {
+        footer = document.createElement("div");
+        footer.className = "sidebar-footer";
+        sidebar.appendChild(footer);
+      }
+      footer.appendChild(logoutLink);
+  }
 }
 
 // Ensure active nav link

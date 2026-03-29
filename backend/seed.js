@@ -9,9 +9,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/disast
 
 const firstNames = ["James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda", "David", "Elizabeth", "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"];
 const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"];
-const regions = ["North Zone", "South Sector", "Downtown Shelter", "East Camp", "West District", "Central Distribution"];
+const regions = ["North Zone", "South Zone", "East Zone", "West Zone", "Central Zone"];
 const priorities = ["High", "Medium", "Low"];
-const aidTypes = ["Food Ration", "Drinking Water", "Medical Kit", "Blanket", "Baby Supplies", "Hygiene Kit", "Temporary Shelter"];
+const aidTypes = ["Food Package", "Water Supplies", "Medical Kit", "Clothing", "Emergency Shelter", "Hygiene Kit"];
 
 // Helper to get random array element
 const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];

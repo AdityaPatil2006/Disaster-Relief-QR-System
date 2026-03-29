@@ -211,12 +211,13 @@ distributeForm.addEventListener("submit", async (e) => {
       osc.stop(audioCtx.currentTime + 0.15);
     } catch (e) {}
 
-    // Reset form
+    // Reset Form
     document.getElementById("items").value = "Food Package";
-    document.getElementById("region").value = "North Zone";
     document.getElementById("notes").value = "";
     document.getElementById("photo-container").style.display = "none";
     capturedPhoto = null;
+    submitBtn.style.backgroundColor = "";
+    submitBtn.innerText = "Record Aid Distribution";
 
     setTimeout(() => {
       infoSection.style.display = "none";
@@ -225,28 +226,45 @@ distributeForm.addEventListener("submit", async (e) => {
   } else {
     showMessage("error", response.error || "Failed to record aid.");
 
-    // Special styling if it's a duplicate rejection
-    if (response.error.includes("already been distributed")) {
-      submitBtn.style.backgroundColor = "var(--danger)";
-      submitBtn.innerText = "Distribution Blocked";
+    // Detect if this was a Duplicate/Cooldown Block
+    const isDuplicate = response.error.toLowerCase().includes("cooldown") || 
+                        response.error.toLowerCase().includes("already");
 
-      // Error Beep
+    if (isDuplicate) {
+      submitBtn.style.backgroundColor = "var(--danger)";
+      submitBtn.style.color = "#fff";
+      submitBtn.innerText = "DUPLICATE BLOCKED";
+      
+      // Visual Blink effect on the card
+      const formCard = document.querySelector(".card.active") || document.querySelector(".card");
+      if(formCard) {
+        formCard.style.animation = "pulse 0.3s ease infinite";
+        setTimeout(() => { formCard.style.animation = ""; }, 1200);
+      }
+
+      // Stronger Alarm Audio (Double Beep)
       try {
-        const audioCtx = new (
-          window.AudioContext || window.webkitAudioContext
-        )();
-        const osc = audioCtx.createOscillator();
-        osc.connect(audioCtx.destination);
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.3);
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(freq, duration, delay = 0) {
+          const osc = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          osc.connect(g);
+          g.connect(audioCtx.destination);
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+          g.gain.setValueAtTime(0.2, audioCtx.currentTime + delay);
+          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+          osc.start(audioCtx.currentTime + delay);
+          osc.stop(audioCtx.currentTime + delay + duration);
+        }
+        beep(120, 0.4); // First beep
+        beep(120, 0.4, 0.5); // Second beep
       } catch (e) {}
 
       setTimeout(() => {
         submitBtn.style.backgroundColor = "";
         submitBtn.innerText = "Record Aid Distribution";
-      }, 3000);
+      }, 4000);
     }
   }
 

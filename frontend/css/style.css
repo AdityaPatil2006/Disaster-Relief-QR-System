@@ -35,12 +35,14 @@ body {
   background-attachment: fixed;
   color: var(--text-main);
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Sidebar Navigation */
 .sidebar {
   width: 280px;
+  height: 100vh;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(16px);
   border-right: 1px solid var(--border);
@@ -48,6 +50,7 @@ body {
   flex-direction: column;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -70,6 +73,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.sidebar-footer {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  background: rgba(15, 23, 42, 0.4);
 }
 
 .nav-link {

@@ -111,40 +111,27 @@
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        let dashboardCharts = {};
+
+        async function refreshDashboard() {
             const role = localStorage.getItem('role');
             const username = localStorage.getItem('username');
             
-            document.getElementById('welcomeMessage').innerText = `Welcome back, ${username || 'User'} (${role || 'Worker'})`;
-
             if(role === 'Admin') {
-                // Show Admin UI Elements
-                document.getElementById('adminCharts').style.display = 'grid';
-                document.getElementById('liveFeedSection').style.display = 'block';
-                document.getElementById('exportBtn').style.display = 'inline-block';
-                
-                // Add the Duplicate stat block
-                const statsGrid = document.getElementById('statsGrid');
-                statsGrid.innerHTML += `
-                    <div class="card stat-card" style="border-bottom: 4px solid var(--danger);">
-                        <div class="stat-value" id="totalDup" style="color: var(--danger)">...</div>
-                        <div class="stat-label">Blocked Security Exceptions</div>
-                    </div>
-                `;
-
-                // Fetch comprehensive analytics
                 const res = await api.audit.analytics();
                 if(res.success) {
                     const { totals, charts, feed } = res.data;
                     document.getElementById('totalBen').innerText = totals.totalBeneficiaries;
                     document.getElementById('totalAid').innerText = totals.totalAidDistributed;
-                    document.getElementById('totalDup').innerText = totals.duplicateAttempts;
+                    
+                    const dupEl = document.getElementById('totalDup');
+                    if(dupEl) dupEl.innerText = totals.duplicateAttempts;
 
                     // Build Feed
                     const feedList = document.getElementById('feedList');
                     if(feed && feed.length > 0) {
                         feedList.innerHTML = feed.map(item => `
-                            <div class="feed-item">
+                            <div class="feed-item" style="animation: slideInRight 0.5s ease backwards">
                                 <div>
                                     <strong style="color:var(--primary)">${item.items}</strong> dispatched to beneficiary ID: <code style="background:rgba(255,255,255,0.1); padding:0.2rem 0.5rem; border-radius:4px;">${item.qrId.slice(0,8)}...</code> in <span class="badge badge-medium">${item.region}</span>
                                 </div>
@@ -153,80 +140,111 @@
                         `).join('');
                     }
 
-                    // Always render charts, use dummy/fallback data if empty to ensure visual wow factor works initially
                     const isEmpty = charts.dailyAid.length === 0;
-
-                    if (isEmpty) {
-                        document.getElementById('welcomeMessage').innerHTML += '<br><span style="color:var(--danger); font-size:0.95rem; font-weight:600;">(Charts currently showing SAMPLE DATA because database is empty. Scan an ID to see real data!)</span>';
-                    }
-
-                    // Prepare Chart Data
                     const lineData = isEmpty ? [0, 5, 2, 8, 3, 15, 12] : charts.dailyAid.map(d => d.value);
                     const lineLabels = isEmpty ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : charts.dailyAid.map(d => d.label);
+                    const pieData = isEmpty ? [45, 30, 25, 20, 15, 10] : charts.aidTypesData.map(d => d.value);
+                    const pieLabels = isEmpty ? ['Food Package', 'Water Supplies', 'Medical Kit', 'Clothing', 'Emergency Shelter', 'Hygiene Kit'] : charts.aidTypesData.map(d => d.label);
+                    const barData = isEmpty ? [30, 45, 10, 20, 25] : charts.regionData.map(d => d.value);
+                    const barLabels = isEmpty ? ['North Zone', 'South Zone', 'East Zone', 'West Zone', 'Central Zone'] : charts.regionData.map(d => d.label);
 
-                    const pieData = isEmpty ? [45, 25, 20, 10] : charts.aidTypesData.map(d => d.value);
-                    const pieLabels = isEmpty ? ['Food Package', 'Water Supplies', 'Medical Kit', 'Clothing'] : charts.aidTypesData.map(d => d.label);
+                    if (dashboardCharts.line) {
+                        dashboardCharts.line.data.labels = lineLabels;
+                        dashboardCharts.line.data.datasets[0].data = lineData;
+                        dashboardCharts.line.update();
+                    } else {
+                        dashboardCharts.line = new Chart(document.getElementById('lineChart'), {
+                            type: 'line', 
+                            data: {
+                                labels: lineLabels,
+                                datasets: [{
+                                    label: 'Daily Activity Flow',
+                                    data: lineData,
+                                    borderColor: '#8b5cf6',
+                                    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                                    fill: true, tension: 0.4, borderWidth: 3
+                                }]
+                            },
+                            options: { maintainAspectRatio: false }
+                        });
+                    }
 
-                    const barData = isEmpty ? [30, 45, 10, 20] : charts.regionData.map(d => d.value);
-                    const barLabels = isEmpty ? ['North Zone', 'South Zone', 'East Zone', 'West Zone'] : charts.regionData.map(d => d.label);
+                    if (dashboardCharts.pie) {
+                        dashboardCharts.pie.data.labels = pieLabels;
+                        dashboardCharts.pie.data.datasets[0].data = pieData;
+                        dashboardCharts.pie.update();
+                    } else {
+                        dashboardCharts.pie = new Chart(document.getElementById('pieChart'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: pieLabels,
+                                datasets: [{
+                                    data: pieData,
+                                    backgroundColor: ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: { maintainAspectRatio: false, cutout: '75%' }
+                        });
+                    }
 
-                    // Chart.js Default styling
-                    Chart.defaults.color = '#94a3b8';
-                    Chart.defaults.font.family = "'Outfit', sans-serif";
-
-                    new Chart(document.getElementById('lineChart'), {
-                        type: 'line', 
-                        data: {
-                            labels: lineLabels,
-                            datasets: [{
-                                label: 'Operations/Distributions',
-                                data: lineData,
-                                borderColor: '#8b5cf6',
-                                backgroundColor: 'rgba(139, 92, 246, 0.15)',
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#06b6d4',
-                                borderWidth: 3
-                            }]
-                        },
-                        options: { maintainAspectRatio: false }
-                    });
-
-                    new Chart(document.getElementById('pieChart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: pieLabels,
-                            datasets: [{
-                                data: pieData,
-                                backgroundColor: ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'],
-                                borderWidth: 0,
-                                hoverOffset: 15
-                            }]
-                        },
-                        options: { maintainAspectRatio: false, cutout: '75%' }
-                    });
-
-                    new Chart(document.getElementById('barChart'), {
-                        type: 'polarArea', 
-                        data: {
-                            labels: barLabels,
-                            datasets: [{
-                                data: barData,
-                                backgroundColor: ['rgba(6, 182, 212, 0.5)','rgba(139, 92, 246, 0.5)','rgba(16, 185, 129, 0.5)','rgba(245, 158, 11, 0.5)'],
-                                borderWidth: 1,
-                                borderColor: 'rgba(255,255,255,0.1)'
-                            }]
-                        },
-                        options: { maintainAspectRatio: false }
-                    });
+                    if (dashboardCharts.bar) {
+                        dashboardCharts.bar.data.labels = barLabels;
+                        dashboardCharts.bar.data.datasets[0].data = barData;
+                        dashboardCharts.bar.update();
+                    } else {
+                        dashboardCharts.bar = new Chart(document.getElementById('barChart'), {
+                            type: 'polarArea', 
+                            data: {
+                                labels: barLabels,
+                                datasets: [{
+                                    data: barData,
+                                    backgroundColor: ['rgba(6, 182, 212, 0.5)','rgba(139, 92, 246, 0.5)','rgba(16, 185, 129, 0.5)','rgba(245, 158, 11, 0.5)', 'rgba(236, 72, 153, 0.5)'],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: { maintainAspectRatio: false }
+                        });
+                    }
                 }
             } else {
-                // Standard Worker request (no charts, just numbers)
                 const bRes = await api.beneficiary.stats();
                 const aRes = await api.aid.stats();
                 if(bRes.success) document.getElementById('totalBen').innerText = bRes.data.totalBeneficiaries;
                 if(aRes.success) document.getElementById('totalAid').innerText = aRes.data.totalAidDistributed;
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const role = localStorage.getItem('role');
+            const username = localStorage.getItem('username');
+            
+            document.getElementById('welcomeMessage').innerText = `Welcome back, ${username || 'User'} (${role || 'Worker'})`;
+
+            if(role === 'Admin') {
+                document.getElementById('adminCharts').style.display = 'grid';
+                document.getElementById('liveFeedSection').style.display = 'block';
+                document.getElementById('exportBtn').style.display = 'inline-block';
+                
+                const statsGrid = document.getElementById('statsGrid');
+                if (statsGrid && !document.getElementById('totalDup')) {
+                  statsGrid.innerHTML += `
+                      <div class="card stat-card" style="border-bottom: 4px solid var(--danger);">
+                          <div class="stat-value" id="totalDup" style="color: var(--danger)">...</div>
+                          <div class="stat-label">Blocked Security Exceptions</div>
+                      </div>
+                  `;
+                }
+            }
+
+            // Perform initial load
+            await refreshDashboard();
+
+            // Setup polling every 30 seconds
+            setInterval(refreshDashboard, 30000);
+            
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Outfit', sans-serif";
         });
 
         async function exportData() {

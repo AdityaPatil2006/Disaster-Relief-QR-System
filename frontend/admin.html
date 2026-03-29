@@ -190,6 +190,90 @@
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script>
+      let adminCharts = {};
+
+      async function refreshAdminAnalytics() {
+        const res = await api.audit.analytics();
+        if (!res.success) return;
+
+        const { totals, charts, feed } = res.data;
+
+        // Totals
+        document.getElementById("t-ben").innerText = totals.totalBeneficiaries;
+        document.getElementById("t-aid").innerText = totals.totalAidDistributed;
+        document.getElementById("t-dup").innerText = totals.duplicateAttempts;
+        document.getElementById("t-regions").innerText = charts.regionData.length;
+
+        // Load activity feed
+        loadActivityFeed(feed);
+
+        // Update or Create Charts
+        updateOrCreateChart("lineChart", "bar", {
+          labels: charts.dailyAid.map((d) => d.label),
+          datasets: [
+            {
+              type: "line",
+              label: "New Registrations",
+              data: charts.dailyRegistrations ? charts.dailyRegistrations.map((d) => d.value) : [],
+              borderColor: "#10B981", tension: 0.4, fill: false, borderWidth: 3
+            },
+            {
+              type: "bar",
+              label: "Aid Distributed",
+              data: charts.dailyAid.map((d) => d.value),
+              backgroundColor: "rgba(79, 70, 229, 0.7)", borderRadius: 4
+            }
+          ]
+        }, "line");
+
+        updateOrCreateChart("pieChart", "doughnut", {
+          labels: charts.aidTypesData.map((d) => d.label),
+          datasets: [{
+            data: charts.aidTypesData.map((d) => d.value),
+            backgroundColor: ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
+          }]
+        }, "pie");
+
+        updateOrCreateChart("barChart", "bar", {
+          labels: charts.regionData.map((d) => d.label),
+          datasets: [{
+            label: "Operations per Region",
+            data: charts.regionData.map((d) => d.value),
+            backgroundColor: "#10B981"
+          }]
+        }, "region");
+
+        updateOrCreateChart("priorityChart", "polarArea", {
+          labels: charts.priorityData.map((d) => d.label),
+          datasets: [{
+            data: charts.priorityData.map((d) => d.value),
+            backgroundColor: ["rgba(239, 68, 68, 0.7)", "rgba(245, 158, 11, 0.7)", "rgba(16, 185, 129, 0.7)"]
+          }]
+        }, "priority");
+
+        updateOrCreateChart("ageChart", "bar", {
+          labels: charts.ageData.map((d) => d.label),
+          datasets: [{
+            label: "Beneficiaries by Age",
+            data: charts.ageData.map((d) => d.value),
+            backgroundColor: "#8B5CF6"
+          }]
+        }, "age");
+      }
+
+      function updateOrCreateChart(id, type, data, refName) {
+        if (adminCharts[refName]) {
+          adminCharts[refName].data = data;
+          adminCharts[refName].update();
+        } else {
+          adminCharts[refName] = new Chart(document.getElementById(id), {
+            type: type,
+            data: data,
+            options: { maintainAspectRatio: false }
+          });
+        }
+      }
+
       document.addEventListener("DOMContentLoaded", async () => {
         const role = localStorage.getItem("role");
         if (!role || role.toLowerCase() !== "admin") {
@@ -198,123 +282,11 @@
           return;
         }
 
-        const res = await api.audit.analytics();
-        if (!res.success) {
-          showMessage("error", "Failed to load analytics.");
-          return;
-        }
+        // Initial fetch
+        await refreshAdminAnalytics();
 
-        const { totals, charts, feed } = res.data;
-
-        // Totals
-        document.getElementById("t-ben").innerText = totals.totalBeneficiaries;
-        document.getElementById("t-aid").innerText = totals.totalAidDistributed;
-        document.getElementById("t-dup").innerText = totals.duplicateAttempts;
-        document.getElementById("t-regions").innerText =
-          charts.regionData.length;
-
-        // Load activity feed
-        loadActivityFeed(feed);
-
-        // Combo Chart (Daily)
-        new Chart(document.getElementById("lineChart"), {
-          type: "bar",
-          data: {
-            labels: charts.dailyAid.map((d) => d.label),
-            datasets: [
-              {
-                type: "line",
-                label: "New Registrations",
-                data: charts.dailyRegistrations ? charts.dailyRegistrations.map((d) => d.value) : [],
-                borderColor: "#10B981",
-                tension: 0.4,
-                fill: false,
-                borderWidth: 3
-              },
-              {
-                type: "bar",
-                label: "Aid Distributed",
-                data: charts.dailyAid.map((d) => d.value),
-                backgroundColor: "rgba(79, 70, 229, 0.7)",
-                borderRadius: 4
-              }
-            ],
-          },
-          options: { maintainAspectRatio: false },
-        });
-
-        // Pie Chart (Items)
-        new Chart(document.getElementById("pieChart"), {
-          type: "doughnut",
-          data: {
-            labels: charts.aidTypesData.map((d) => d.label),
-            datasets: [
-              {
-                data: charts.aidTypesData.map((d) => d.value),
-                backgroundColor: [
-                  "#4F46E5",
-                  "#10B981",
-                  "#F59E0B",
-                  "#EF4444",
-                  "#8B5CF6",
-                ],
-              },
-            ],
-          },
-          options: { maintainAspectRatio: false },
-        });
-
-        // Bar Chart (Regions)
-        new Chart(document.getElementById("barChart"), {
-          type: "bar",
-          data: {
-            labels: charts.regionData.map((d) => d.label),
-            datasets: [
-              {
-                label: "Operations per Region",
-                data: charts.regionData.map((d) => d.value),
-                backgroundColor: "#10B981",
-              },
-            ],
-          },
-          options: { maintainAspectRatio: false },
-        });
-
-        // Priority Chart (Polar Area)
-        new Chart(document.getElementById("priorityChart"), {
-          type: "polarArea",
-          data: {
-            labels: charts.priorityData.map((d) => d.label),
-            datasets: [
-              {
-                data: charts.priorityData.map((d) => d.value),
-                backgroundColor: [
-                  "rgba(239, 68, 68, 0.7)",
-                  "rgba(245, 158, 11, 0.7)",
-                  "rgba(16, 185, 129, 0.7)"
-                ],
-                borderWidth: 0
-              },
-            ],
-          },
-          options: { maintainAspectRatio: false },
-        });
-
-        // Age Demographics Chart (Bar)
-        new Chart(document.getElementById("ageChart"), {
-          type: "bar",
-          data: {
-            labels: charts.ageData.map((d) => d.label),
-            datasets: [
-              {
-                label: "Beneficiaries by Age",
-                data: charts.ageData.map((d) => d.value),
-                backgroundColor: "#8B5CF6",
-              },
-            ],
-          },
-          options: { maintainAspectRatio: false },
-        });
+        // Auto Refresh every 30 seconds
+        setInterval(refreshAdminAnalytics, 30000);
       });
 
       function loadActivityFeed(feed) {
