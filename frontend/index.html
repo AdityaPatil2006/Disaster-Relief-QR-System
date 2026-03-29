@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Relief - Unified Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .empty-state {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 5;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .feed-container {
+            margin-top: 2rem;
+        }
+        .feed-item {
+            background: rgba(255,255,255,0.03);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .feed-time { color: var(--text-muted); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Smart Relief
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Dashboard</a>
+            <a href="register.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Register</a>
+            <a href="manage.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Manage IDs</a>
+            <a href="scan.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01"/></svg> Scan QR</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="page-title">Operations Dashboard</h1>
+                <p id="welcomeMessage" style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0.5rem;">Welcome back.</p>
+            </div>
+            <button class="btn btn-secondary admin-only" id="exportBtn" onclick="exportData()" style="display: none; background: #10b981; color: white;">Export Excel Report</button>
+        </header>
+
+        <section class="dashboard-grid" id="statsGrid">
+            <div class="card stat-card">
+                <div class="stat-value" id="totalBen">...</div>
+                <div class="stat-label">Total Registered</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-value" id="totalAid">...</div>
+                <div class="stat-label">Aid Distributed</div>
+            </div>
+        </section>
+
+        <!-- Admin Only Charts Grid -->
+        <section class="charts-grid admin-only" id="adminCharts" style="display: none;">
+            <div class="card" style="grid-column: 1 / -1; position: relative;">
+                <h3 style="margin-top:0; font-size: 1.25rem;">Daily Activity Pulse</h3>
+                <div class="chart-container">
+                    <div id="lineEmpty" class="empty-state" style="display:none;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        <p style="margin-top: 1rem;">No operations logged yet.</p>
+                    </div>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+            <div class="card" style="position: relative;">
+                <h3 style="margin-top:0; font-size: 1.25rem;">Supply Categories</h3>
+                <div class="chart-container">
+                    <div id="pieEmpty" class="empty-state" style="display:none;">Waiting for Data...</div>
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="card" style="position: relative;">
+                <h3 style="margin-top:0; font-size: 1.25rem;">Zonal Dispatch Heatmap</h3>
+                <div class="chart-container">
+                    <div id="barEmpty" class="empty-state" style="display:none;">Waiting for Data...</div>
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Live Feed -->
+        <section class="feed-container admin-only card" id="liveFeedSection" style="display:none; padding: 2rem;">
+            <h3 style="margin-top:0; font-size: 1.25rem; margin-bottom: 1.5rem;">Live Distribution Feed</h3>
+            <div id="feedList">
+                <p style="color:var(--text-muted);">No recent distributions.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const role = localStorage.getItem('role');
+            const username = localStorage.getItem('username');
+            
+            document.getElementById('welcomeMessage').innerText = `Welcome back, ${username || 'User'} (${role || 'Worker'})`;
+
+            if(role === 'Admin') {
+                // Show Admin UI Elements
+                document.getElementById('adminCharts').style.display = 'grid';
+                document.getElementById('liveFeedSection').style.display = 'block';
+                document.getElementById('exportBtn').style.display = 'inline-block';
+                
+                // Add the Duplicate stat block
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML += `
+                    <div class="card stat-card" style="border-bottom: 4px solid var(--danger);">
+                        <div class="stat-value" id="totalDup" style="color: var(--danger)">...</div>
+                        <div class="stat-label">Blocked Security Exceptions</div>
+                    </div>
+                `;
+
+                // Fetch comprehensive analytics
+                const res = await api.audit.analytics();
+                if(res.success) {
+                    const { totals, charts, feed } = res.data;
+                    document.getElementById('totalBen').innerText = totals.totalBeneficiaries;
+                    document.getElementById('totalAid').innerText = totals.totalAidDistributed;
+                    document.getElementById('totalDup').innerText = totals.duplicateAttempts;
+
+                    // Build Feed
+                    const feedList = document.getElementById('feedList');
+                    if(feed && feed.length > 0) {
+                        feedList.innerHTML = feed.map(item => `
+                            <div class="feed-item">
+                                <div>
+                                    <strong style="color:var(--primary)">${item.items}</strong> dispatched to beneficiary ID: <code style="background:rgba(255,255,255,0.1); padding:0.2rem 0.5rem; border-radius:4px;">${item.qrId.slice(0,8)}...</code> in <span class="badge badge-medium">${item.region}</span>
+                                </div>
+                                <div class="feed-time">${new Date(item.time).toLocaleTimeString()}</div>
+                            </div>
+                        `).join('');
+                    }
+
+                    // Always render charts, use dummy/fallback data if empty to ensure visual wow factor works initially
+                    const isEmpty = charts.dailyAid.length === 0;
+
+                    if (isEmpty) {
+                        document.getElementById('welcomeMessage').innerHTML += '<br><span style="color:var(--danger); font-size:0.95rem; font-weight:600;">(Charts currently showing SAMPLE DATA because database is empty. Scan an ID to see real data!)</span>';
+                    }
+
+                    // Prepare Chart Data
+                    const lineData = isEmpty ? [0, 5, 2, 8, 3, 15, 12] : charts.dailyAid.map(d => d.value);
+                    const lineLabels = isEmpty ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : charts.dailyAid.map(d => d.label);
+
+                    const pieData = isEmpty ? [45, 25, 20, 10] : charts.aidTypesData.map(d => d.value);
+                    const pieLabels = isEmpty ? ['Food Package', 'Water Supplies', 'Medical Kit', 'Clothing'] : charts.aidTypesData.map(d => d.label);
+
+                    const barData = isEmpty ? [30, 45, 10, 20] : charts.regionData.map(d => d.value);
+                    const barLabels = isEmpty ? ['North Zone', 'South Zone', 'East Zone', 'West Zone'] : charts.regionData.map(d => d.label);
+
+                    // Chart.js Default styling
+                    Chart.defaults.color = '#94a3b8';
+                    Chart.defaults.font.family = "'Outfit', sans-serif";
+
+                    new Chart(document.getElementById('lineChart'), {
+                        type: 'line', 
+                        data: {
+                            labels: lineLabels,
+                            datasets: [{
+                                label: 'Operations/Distributions',
+                                data: lineData,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#06b6d4',
+                                borderWidth: 3
+                            }]
+                        },
+                        options: { maintainAspectRatio: false }
+                    });
+
+                    new Chart(document.getElementById('pieChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: pieLabels,
+                            datasets: [{
+                                data: pieData,
+                                backgroundColor: ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'],
+                                borderWidth: 0,
+                                hoverOffset: 15
+                            }]
+                        },
+                        options: { maintainAspectRatio: false, cutout: '75%' }
+                    });
+
+                    new Chart(document.getElementById('barChart'), {
+                        type: 'polarArea', 
+                        data: {
+                            labels: barLabels,
+                            datasets: [{
+                                data: barData,
+                                backgroundColor: ['rgba(6, 182, 212, 0.5)','rgba(139, 92, 246, 0.5)','rgba(16, 185, 129, 0.5)','rgba(245, 158, 11, 0.5)'],
+                                borderWidth: 1,
+                                borderColor: 'rgba(255,255,255,0.1)'
+                            }]
+                        },
+                        options: { maintainAspectRatio: false }
+                    });
+                }
+            } else {
+                // Standard Worker request (no charts, just numbers)
+                const bRes = await api.beneficiary.stats();
+                const aRes = await api.aid.stats();
+                if(bRes.success) document.getElementById('totalBen').innerText = bRes.data.totalBeneficiaries;
+                if(aRes.success) document.getElementById('totalAid').innerText = aRes.data.totalAidDistributed;
+            }
+        });
+
+        async function exportData() {
+            const token = localStorage.getItem('token');
+            if(!token) return showMessage('error', 'Unauthorized');
+            
+            showMessage('success', 'Generating Excel report, please wait...');
+
+            try {
+                // Fetch blob with auth headers since Excel endpoint is protected
+                const url = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:5000/api' : '/api') + '/audit/export/excel';
+                const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                
+                if(!response.ok) throw new Error('Export Failed');
+                
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = "Smart_Relief_Full_Data.xlsx";
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch(e) {
+                showMessage('error', 'Excel download failed');
+            }
+        }
+    </script>
+</body>
+</html>

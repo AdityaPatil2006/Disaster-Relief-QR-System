@@ -1,0 +1,3 @@
+﻿Logged in: true
+Analytics HTTP Status: 500
+Analytics Response: {"error":"Failed to fetch analytics"}

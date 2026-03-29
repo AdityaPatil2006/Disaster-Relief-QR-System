@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage IDs - Smart Relief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 2rem; border-radius: var(--radius);
+            width: 100%; max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .close-btn { cursor: pointer; font-size: 2rem; line-height: 1; color: var(--text-muted); transition: color 0.3s; }
+        .close-btn:hover { color: var(--danger); }
+        .timeline-item {
+            border-left: 2px solid var(--primary);
+            padding-left: 1.5rem;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -7px; top: 0;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .timeline-item.block { border-left-color: var(--danger); }
+        .timeline-item.block::before { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Smart Relief
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Dashboard</a>
+            <a href="register.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Register</a>
+            <a href="manage.html" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Manage IDs</a>
+            <a href="scan.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01"/></svg> Scan QR</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-title">Directory</h1>
+            <p style="color: var(--text-muted)">Search and investigate beneficiary footprints.</p>
+        </header>
+
+        <section class="card">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <input type="text" id="searchInput" placeholder="Search by name or QR ID...">
+                </div>
+                <div style="width: 200px;">
+                    <select id="priorityFilter">
+                        <option value="All">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="searchBtn">Refresh</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0;">Edit Beneficiary</h2>
+                <div class="close-btn" onclick="closeModal('editModal')">&times;</div>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="edit-qrId">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Age</label>
+                        <input type="number" id="edit-age" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Phone</label>
+                        <input type="tel" id="edit-phone" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="edit-address" required>
+                </div>
+                <div class="form-group">
+                    <label>Priority Tag</label>
+                    <select id="edit-priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Timeline Modal -->
+    <div class="modal" id="timelineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0;">Operation Footprint</h2>
+                <div class="close-btn" onclick="closeModal('timelineModal')">&times;</div>
+            </div>
+            <div id="timelineContainer">
+                <p>Loading historical records...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        const tableBody = document.getElementById('tableBody');
+        let currentData = [];
+
+        async function loadData() {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
+            const search = document.getElementById('searchInput').value;
+            const priority = document.getElementById('priorityFilter').value;
+            let query = `?search=${encodeURIComponent(search)}&priority=${encodeURIComponent(priority)}`;
+            
+            const response = await api.beneficiary.list(query);
+            tableBody.innerHTML = '';
+            
+            if (response.success) {
+                currentData = response.data;
+                if (currentData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No beneficiaries found.</td></tr>';
+                    return;
+                }
+                currentData.forEach(b => {
+                    const tr = document.createElement('tr');
+                    let badgeClass = b.priority === 'High' ? 'badge-high' : b.priority === 'Low' ? 'badge-low' : 'badge-medium';
+
+                    tr.innerHTML = `
+                        <td><strong>${b.name}</strong><br><small style="color:var(--text-muted)">Age: ${b.age}</small></td>
+                        <td>${b.phone}</td>
+                        <td>${b.address}</td>
+                        <td><span class="badge ${badgeClass}">${b.priority}</span></td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button onclick="openTimeline('${b.qrId}')" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Timeline</button>
+                                <button onclick="openEdit('${b.qrId}')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Edit</button>
+                                <a href="qr.html?qrId=${b.qrId}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">QR</a>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load data.</td></tr>';
+            }
+        }
+
+        function openEdit(qrId) {
+            const b = currentData.find(x => x.qrId === qrId);
+            if(!b) return;
+            document.getElementById('edit-qrId').value = b.qrId;
+            document.getElementById('edit-name').value = b.name;
+            document.getElementById('edit-age').value = b.age;
+            document.getElementById('edit-phone').value = b.phone;
+            document.getElementById('edit-address').value = b.address;
+            document.getElementById('edit-priority').value = b.priority;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        async function openTimeline(qrId) {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '<p>Loading records...</p>';
+            document.getElementById('timelineModal').style.display = 'flex';
+
+            const res = await api.beneficiary.timeline(qrId);
+            if(!res.success) {
+                container.innerHTML = `<p style="color:var(--danger)">Failed to load timeline.</p>`;
+                return;
+            }
+
+            if(res.data.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted)">No operation history recorded for this individual yet.</p>`;
+                return;
+            }
+
+            let html = '';
+            res.data.forEach(item => {
+                const dateRaw = new Date(item.time);
+                const isBlock = item.type === 'Security Block';
+                html += `
+                    <div class="timeline-item ${isBlock ? 'block' : ''}">
+                        <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.25rem;">
+                            ${dateRaw.toLocaleDateString()} at ${dateRaw.toLocaleTimeString()}
+                        </div>
+                        <strong style="color: ${isBlock ? 'var(--danger)' : 'var(--main-text)'}; font-size: 1.1rem; display:block;">
+                            ${item.type}
+                        </strong>
+                        <p style="margin: 0.5rem 0 0; color: var(--text-muted);">
+                            ${isBlock 
+                                ? `${item.action} — ${item.message}`
+                                : `Dispatched <strong style="color:var(--primary)">${item.items}</strong> across zone: <span class="badge badge-medium">${item.region}</span>`
+                            }
+                        </p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const qrId = document.getElementById('edit-qrId').value;
+            const data = {
+                name: document.getElementById('edit-name').value,
+                age: document.getElementById('edit-age').value,
+                phone: document.getElementById('edit-phone').value,
+                address: document.getElementById('edit-address').value,
+                priority: document.getElementById('edit-priority').value
+            };
+            
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            const res = await api.beneficiary.update(qrId, data);
+            btn.disabled = false;
+            
+            if(res.success) {
+                showMessage('success', 'Updated Successfully');
+                closeModal('editModal');
+                loadData();
+            } else {
+                showMessage('error', res.error || 'Update failed');
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('keyup', (e) => { if(e.key === 'Enter') loadData(); });
+        document.getElementById('priorityFilter').addEventListener('change', loadData);
+        document.getElementById('searchBtn').addEventListener('click', loadData);
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

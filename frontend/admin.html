@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Smart Relief</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        Smart Relief
+      </div>
+      <nav class="sidebar-nav">
+        <!-- Sidebar injected correctly by JS. admin.html itself doesn't need duplicates, checkAuthAndInjectUI handles it -->
+        <a href="index.html" class="nav-link"
+          ><svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+          Dashboard</a
+        >
+        <a href="register.html" class="nav-link"
+          ><svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <line x1="20" y1="8" x2="20" y2="14" />
+            <line x1="23" y1="11" x2="17" y2="11" />
+          </svg>
+          Register</a
+        >
+        <a href="manage.html" class="nav-link"
+          ><svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          Manage IDs</a
+        >
+        <a href="scan.html" class="nav-link"
+          ><svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01" />
+          </svg>
+          Scan QR</a
+        >
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+        <div>
+          <h1 class="page-title">Admin Analytics</h1>
+          <p style="color: var(--text-muted)">
+            High-level overview and insights of operations.
+          </p>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="generatePredictions()">
+            📊 Predict Needs
+          </button>
+          <button class="btn btn-secondary" onclick="exportData()">
+            📥 Export Data (CSV)
+          </button>
+        </div>
+      </header>
+
+      <section
+        class="dashboard-grid"
+        style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"
+      >
+        <div class="card stat-card">
+          <div class="stat-value" id="t-ben">...</div>
+          <div class="stat-label">Beneficiaries</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" id="t-aid">...</div>
+          <div class="stat-label">Aid Dispatched</div>
+        </div>
+        <div
+          class="card stat-card"
+          style="border-bottom: 4px solid var(--danger)"
+        >
+          <div class="stat-value" id="t-dup" style="color: var(--danger)">
+            ...
+          </div>
+          <div class="stat-label">Duplicates Blocked</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value" id="t-regions">...</div>
+          <div class="stat-label">Active Regions</div>
+        </div>
+      </section>
+
+      <section class="charts-grid">
+        <div class="card">
+          <h3 style="margin-top: 0">Daily Distribution (Last 7 Days)</h3>
+          <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top: 0">Aid Type Distribution</h3>
+          <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top: 0">Priority Level Breakdown</h3>
+          <div class="chart-container">
+            <canvas id="priorityChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top: 0">Age Demographics</h3>
+          <div class="chart-container">
+            <canvas id="ageChart"></canvas>
+          </div>
+        </div>
+        <div class="card" style="grid-column: 1 / -1">
+          <h3 style="margin-top: 0">Regional Activity</h3>
+          <div class="chart-container">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top: 0">Real-time Activity Feed</h3>
+        <div id="activityFeed" style="max-height: 300px; overflow-y: auto">
+          <p style="color: var(--text-muted); text-align: center">
+            Loading recent activities...
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const role = localStorage.getItem("role");
+        if (!role || role.toLowerCase() !== "admin") {
+          showMessage("error", "Unauthorized. Redirecting...");
+          setTimeout(() => (window.location.href = "index.html"), 1500);
+          return;
+        }
+
+        const res = await api.audit.analytics();
+        if (!res.success) {
+          showMessage("error", "Failed to load analytics.");
+          return;
+        }
+
+        const { totals, charts, feed } = res.data;
+
+        // Totals
+        document.getElementById("t-ben").innerText = totals.totalBeneficiaries;
+        document.getElementById("t-aid").innerText = totals.totalAidDistributed;
+        document.getElementById("t-dup").innerText = totals.duplicateAttempts;
+        document.getElementById("t-regions").innerText =
+          charts.regionData.length;
+
+        // Load activity feed
+        loadActivityFeed(feed);
+
+        // Combo Chart (Daily)
+        new Chart(document.getElementById("lineChart"), {
+          type: "bar",
+          data: {
+            labels: charts.dailyAid.map((d) => d.label),
+            datasets: [
+              {
+                type: "line",
+                label: "New Registrations",
+                data: charts.dailyRegistrations ? charts.dailyRegistrations.map((d) => d.value) : [],
+                borderColor: "#10B981",
+                tension: 0.4,
+                fill: false,
+                borderWidth: 3
+              },
+              {
+                type: "bar",
+                label: "Aid Distributed",
+                data: charts.dailyAid.map((d) => d.value),
+                backgroundColor: "rgba(79, 70, 229, 0.7)",
+                borderRadius: 4
+              }
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+
+        // Pie Chart (Items)
+        new Chart(document.getElementById("pieChart"), {
+          type: "doughnut",
+          data: {
+            labels: charts.aidTypesData.map((d) => d.label),
+            datasets: [
+              {
+                data: charts.aidTypesData.map((d) => d.value),
+                backgroundColor: [
+                  "#4F46E5",
+                  "#10B981",
+                  "#F59E0B",
+                  "#EF4444",
+                  "#8B5CF6",
+                ],
+              },
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+
+        // Bar Chart (Regions)
+        new Chart(document.getElementById("barChart"), {
+          type: "bar",
+          data: {
+            labels: charts.regionData.map((d) => d.label),
+            datasets: [
+              {
+                label: "Operations per Region",
+                data: charts.regionData.map((d) => d.value),
+                backgroundColor: "#10B981",
+              },
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+
+        // Priority Chart (Polar Area)
+        new Chart(document.getElementById("priorityChart"), {
+          type: "polarArea",
+          data: {
+            labels: charts.priorityData.map((d) => d.label),
+            datasets: [
+              {
+                data: charts.priorityData.map((d) => d.value),
+                backgroundColor: [
+                  "rgba(239, 68, 68, 0.7)",
+                  "rgba(245, 158, 11, 0.7)",
+                  "rgba(16, 185, 129, 0.7)"
+                ],
+                borderWidth: 0
+              },
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+
+        // Age Demographics Chart (Bar)
+        new Chart(document.getElementById("ageChart"), {
+          type: "bar",
+          data: {
+            labels: charts.ageData.map((d) => d.label),
+            datasets: [
+              {
+                label: "Beneficiaries by Age",
+                data: charts.ageData.map((d) => d.value),
+                backgroundColor: "#8B5CF6",
+              },
+            ],
+          },
+          options: { maintainAspectRatio: false },
+        });
+      });
+
+      function loadActivityFeed(feed) {
+        const feedContainer = document.getElementById("activityFeed");
+        if (!feed || feed.length === 0) {
+          feedContainer.innerHTML =
+            '<p style="color: var(--text-muted); text-align: center;">No recent activity</p>';
+          return;
+        }
+
+        feedContainer.innerHTML = feed
+          .map(
+            (activity) => `
+                <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>ID: ${activity.qrId}</strong><br>
+                        <small style="color: var(--text-muted)">Items: ${activity.items} | Region: ${activity.region}</small>
+                    </div>
+                    <small style="color: var(--text-muted)">${new Date(
+                      activity.time,
+                    ).toLocaleString()}</small>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function exportData() {
+        try {
+          showMessage("warning", "Generating Comprehensive CSV...");
+          const blob = await api.audit.exportCSVBlob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute(
+            "download",
+            `SmartRelief_Data_${new Date().toISOString().split("T")[0]}.csv`,
+          );
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+          showMessage("success", "Export downloaded successfully!");
+        } catch (error) {
+          console.error(error);
+          showMessage("error", "Failed to export data");
+        }
+      }
+
+      async function generatePredictions() {
+        showMessage("warning", "Generating predictive analytics...");
+
+        try {
+          const res = await api.audit.analytics();
+          if (!res.success)
+            return showMessage("error", "Failed to generate predictions");
+
+          const { totals, charts } = res.data;
+
+          // Simple predictive logic based on trends
+          const avgDailyAid =
+            charts.dailyAid.reduce((sum, day) => sum + day.value, 0) /
+            charts.dailyAid.length;
+          const projectedWeekly = Math.round(avgDailyAid * 7 * 1.2); // 20% growth projection
+
+          const highPriorityPercentage =
+            (charts.priorityData.find((p) => p.label === "High")?.value /
+              totals.totalBeneficiaries) *
+              100 || 0;
+          const mostNeededAid = charts.aidTypesData.reduce((max, item) =>
+            item.value > max.value ? item : max,
+          );
+
+          // Show prediction modal
+          const predictionHTML = `
+          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                     background: var(--surface); padding: 2rem; border-radius: var(--radius); 
+                     border: 1px solid var(--border); z-index: 1000; min-width: 400px;">
+              <h3 style="margin-top: 0; color: var(--primary);">📊 Predictive Analytics</h3>
+              <div style="margin: 1rem 0;">
+                  <p><strong>Projected Weekly Need:</strong> ${projectedWeekly} aid packages</p>
+                  <p><strong>High Priority Cases:</strong> ${highPriorityPercentage.toFixed(1)}% of beneficiaries</p>
+                  <p><strong>Most Needed Item:</strong> ${mostNeededAid.label} (${mostNeededAid.value} distributed)</p>
+                  <p><strong>Busiest Region:</strong> ${charts.regionData.reduce((max, r) => (r.value > max.value ? r : max)).label}</p>
+              </div>
+              <button class="btn btn-primary" onclick="this.parentElement.remove()">Close</button>
+          </div>
+          <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                     background: rgba(0,0,0,0.5); z-index: 999;" onclick="this.remove(); 
+                     document.querySelector('[style*=position: fixed]').remove();"></div>
+      `;
+
+          document.body.insertAdjacentHTML("beforeend", predictionHTML);
+          showMessage("success", "Predictions generated successfully!");
+        } catch (error) {
+          showMessage("error", "Failed to generate predictions");
+        }
+      }
+    </script>
+  </body>
+</html>
