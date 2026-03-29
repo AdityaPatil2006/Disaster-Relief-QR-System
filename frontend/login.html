@@ -1,96 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Smart Relief</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
     <style>
-        .login-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            width: 100%;
-            background-color: var(--primary);
-        }
-        .login-card {
-            background: white;
-            padding: 3rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 400px;
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+      .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+        background-color: var(--primary);
+      }
+      .login-card {
+        background: white;
+        padding: 3rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 400px;
+      }
+      .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
     </style>
-</head>
-<body style="flex-direction: row; display: block;">
-
+  </head>
+  <body style="flex-direction: row; display: block">
     <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                <h1 style="margin: 0;">Smart Relief</h1>
-                <p style="color: var(--text-muted); margin-top: 0.5rem;">Sign in to your account</p>
-            </div>
-
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Login</button>
-            </form>
-            <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.875rem;">
-                Default Accounts:<br>
-                Admin: <code>admin</code> / <code>admin123</code><br>
-                Worker: <code>worker</code> / <code>worker123</code>
-            </p>
+      <div class="login-card">
+        <div class="login-header">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--primary)"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            style="margin-bottom: 1rem"
+          >
+            <path
+              d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+            />
+          </svg>
+          <h1 style="margin: 0; color: grey">Smart Relief</h1>
+          <p style="color: var(--text-muted); margin-top: 0.5rem">
+            Sign in to your account
+          </p>
         </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" required />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%; margin-top: 1rem"
+          >
+            Login
+          </button>
+        </form>
+        <p
+          style="
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+          "
+        >
+          Default Accounts:<br />
+          Admin: <code>admin</code> / <code>admin123</code><br />
+          Worker: <code>worker</code> / <code>worker123</code>
+        </p>
+      </div>
     </div>
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const btn = e.target.querySelector('button');
-            btn.disabled = true;
-            btn.innerText = 'Verifying...';
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-            const data = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
+          const btn = e.target.querySelector("button");
+          btn.disabled = true;
+          btn.innerText = "Verifying...";
 
-            const response = await api.auth.login(data);
-            
-            if (response.success) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role);
-                localStorage.setItem('username', response.data.username);
-                
-                showMessage('success', 'Login successful!');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            } else {
-                showMessage('error', response.error || 'Login failed');
-                btn.disabled = false;
-                btn.innerText = 'Login';
-            }
+          const data = {
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value,
+          };
+
+          const response = await api.auth.login(data);
+
+          if (response.success) {
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem("role", response.data.role);
+            localStorage.setItem("username", response.data.username);
+
+            showMessage("success", "Login successful!");
+
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1000);
+          } else {
+            showMessage("error", response.error || "Login failed");
+            btn.disabled = false;
+            btn.innerText = "Login";
+          }
         });
     </script>
-</body>
+  </body>
 </html>
