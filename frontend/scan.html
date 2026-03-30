@@ -2,18 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scan & Distribute - Smart Relief</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Relief Dispatch - Smart Relief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/style.css" />
-    <!-- html5-qrcode CDN -->
-    <script
-      src="https://unpkg.com/html5-qrcode"
-      type="text/javascript"
-    ></script>
+    <!-- ZXing (High Performance Scanner) -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
       #reader {
         width: 100%;
@@ -22,239 +16,193 @@
         border-radius: var(--radius);
         overflow: hidden;
         border: 2px solid var(--border);
+        position: relative;
+        background: #000;
+        aspect-ratio: 1;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      }
+      .scanner-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        border: 40px solid rgba(0,0,0,0.3);
+        box-sizing: border-box;
+      }
+      .scanner-line {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 3px;
+        background: var(--primary);
+        box-shadow: 0 0 20px var(--primary);
+        animation: scanMove 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        display: none;
+      }
+      @keyframes scanMove {
+        0% { top: 0; opacity: 0.5; }
+        50% { top: 100%; opacity: 1; }
+        100% { top: 0; opacity: 0.5; }
+      }
+      #reader.scanning .scanner-line {
+        display: block;
       }
       .scan-container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1rem;
+        gap: 2rem;
+        padding: 2.5rem !important;
       }
       .scanned-info {
         display: none;
         margin-top: 2rem;
-        padding: 1.5rem;
-        background: rgba(30, 41, 59, 0.9);
-        backdrop-filter: blur(12px);
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+      }
+      .info-item {
+        background: rgba(255,255,255,0.03);
+        padding: 1rem;
+        border-radius: 12px;
         border: 1px solid var(--border);
-        border-radius: var(--radius);
-        color: var(--text-main);
+      }
+      .info-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+      }
+      .info-value {
+        font-weight: 600;
+        font-size: 1rem;
       }
     </style>
   </head>
   <body>
     <aside class="sidebar">
       <div class="sidebar-header">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
         Smart Relief
       </div>
       <nav class="sidebar-nav">
-        <a href="index.html" class="nav-link"
-          ><svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
-          Dashboard</a
-        >
-        <a href="register.html" class="nav-link"
-          ><svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="8.5" cy="7" r="4" />
-            <line x1="20" y1="8" x2="20" y2="14" />
-            <line x1="23" y1="11" x2="17" y2="11" />
-          </svg>
-          Register</a
-        >
-        <a href="manage.html" class="nav-link"
-          ><svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          Manage IDs</a
-        >
-        <a href="scan.html" class="nav-link active"
-          ><svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01" />
-          </svg>
-          Scan QR</a
-        >
+        <a href="index.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg> Dashboard</a>
+        <a href="register.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg> Register</a>
+        <a href="manage.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> Manage IDs</a>
+        <a href="scan.html" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01" /></svg> Scan QR</a>
       </nav>
     </aside>
 
     <main class="main-content">
       <header class="page-header">
-        <h1 class="page-title">Scan QR Code</h1>
-        <p style="color: var(--text-muted)">
-          Verify beneficiary identity and distribute aid.
-        </p>
+        <h1 class="page-title">Relief Dispatch</h1>
+        <p style="color: var(--text-muted)">Verify beneficiary credentials and log aid distribution.</p>
       </header>
 
       <section class="card scan-container">
-        <div id="reader"></div>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-          <button id="btn-start" class="btn btn-primary">Start Scanner</button>
-          <button id="btn-stop" class="btn btn-secondary" style="display: none">
-            Stop Scanner
+        <div id="reader">
+          <video id="qr-video" playsinline autoplay muted style="width: 100%; height: 100%; object-fit: cover; display: block"></video>
+          <canvas id="qr-canvas" hidden></canvas>
+          <div class="scanner-overlay"><div class="scanner-line"></div></div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px;">
+          <button id="btn-start" class="btn btn-primary" style="flex: 1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Start Scanner
+          </button>
+          <button id="btn-switch" class="btn btn-secondary" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8.1 8.1 0 0 0-15.5-2m-.5-4v4h4m-4 5a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
+            Switch Camera
+          </button>
+          <button id="btn-stop" class="btn btn-secondary" style="display: none; background: var(--danger); border-color: transparent;">
+            Stop
           </button>
         </div>
 
-        <div style="margin-top: 1rem; width: 100%; max-width: 500px">
-          <p style="text-align: center; color: var(--text-muted)">
-            OR Manual Verification
-          </p>
-          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-            <input
-              type="text"
-              id="manual-qr"
-              placeholder="Enter QR ID manually"
-            />
-            <button id="btn-manual" class="btn btn-secondary">Verify</button>
+        <div style="width: 100%; max-width: 500px; padding-top: 1rem; border-top: 1px solid var(--border);">
+          <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">Manual Identity Entry</p>
+          <div style="display: flex; gap: 0.75rem;">
+            <input type="text" id="manual-qr" placeholder="Enter Registration ID..." style="flex: 1;">
+            <button id="btn-manual" class="btn btn-secondary" style="padding: 0 1.5rem;">Verify</button>
           </div>
         </div>
       </section>
 
       <!-- Beneficiary Info & Record Aid Form -->
       <section class="card scanned-info" id="info-section">
-        <div
-          style="
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1rem;
-          "
-        >
-          <h2 id="b-name" style="margin-top: 0; color: var(--primary)">
-            Beneficiary Name
-          </h2>
-          <button
-            class="btn btn-secondary"
-            onclick="capturePhoto()"
-            style="padding: 0.5rem 1rem; font-size: 0.875rem"
-          >
-            📷 Capture Photo
-          </button>
-        </div>
-        <div
-          style="
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-          "
-        >
-          <div><strong>Age:</strong> <span id="b-age"></span></div>
-          <div><strong>Phone:</strong> <span id="b-phone"></span></div>
-          <div><strong>Address:</strong> <span id="b-address"></span></div>
+        <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
           <div>
-            <strong>Priority:</strong>
-            <span id="b-priority" class="badge"></span>
+            <span class="badge badge-medium" id="b-priority" style="margin-bottom: 0.5rem; display: inline-block;">Priority</span>
+            <h2 id="b-name" style="margin: 0; font-size: 1.75rem; color: white;">Beneficiary Name</h2>
           </div>
-        </div>
-        <div id="photo-container" style="display: none; margin-bottom: 1rem">
-          <img
-            id="beneficiary-photo"
-            style="
-              width: 150px;
-              height: 150px;
-              object-fit: cover;
-              border-radius: var(--radius);
-              border: 2px solid var(--border);
-            "
-            alt="Beneficiary Photo"
-          />
-        </div>
-
-        <hr
-          style="
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 1.5rem 0;
-          "
-        />
-
-        <h3>Distribute Aid</h3>
-        <form id="distributeForm">
-          <input type="hidden" id="distribute-qr" />
-
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <div class="form-group" style="flex: 1">
-              <label>Aid Type (Select)</label>
-              <select id="items" required>
-                <option value="Food Package">Food Package</option>
-                <option value="Water Supplies">Water Supplies</option>
-                <option value="Medical Kit">Medical Kit</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Emergency Shelter">Emergency Shelter</option>
-                <option value="Hygiene Kit">Hygiene Kit</option>
-              </select>
-            </div>
-            <div class="form-group" style="flex: 1">
-              <label>Distribution Region</label>
-              <select id="region" required>
-                <option value="North Zone">North Zone</option>
-                <option value="South Zone">South Zone</option>
-                <option value="East Zone">East Zone</option>
-                <option value="West Zone">West Zone</option>
-                <option value="Central Zone">Central Zone</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Special Notes (Optional)</label>
-            <input
-              type="text"
-              id="notes"
-              placeholder="Any special requirements or notes..."
-            />
-          </div>
-
-          <button type="submit" class="btn btn-primary" style="width: 100%">
-            Record Aid Distribution
+          <button class="btn btn-secondary" onclick="capturePhoto()" style="padding: 0.75rem 1.25rem; font-size: 0.875rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Capture Evidence
           </button>
-        </form>
+        </header>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Age</div>
+            <div class="info-value" id="b-age">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Contact</div>
+            <div class="info-value" id="b-phone">-</div>
+          </div>
+          <div class="info-item" style="grid-column: span 2;">
+            <div class="info-label">Base Location</div>
+            <div class="info-value" id="b-address">-</div>
+          </div>
+        </div>
+
+        <div id="photo-container" style="display: none; margin-bottom: 2rem; text-align: center;">
+          <img id="beneficiary-photo" style="width: 200px; height: 150px; object-fit: cover; border-radius: var(--radius); border: 2px solid var(--primary); box-shadow: var(--shadow-glow);" alt="Evidence Photo" />
+        </div>
+
+        <div style="background: rgba(139, 92, 246, 0.05); padding: 2rem; border-radius: var(--radius); border: 1px solid rgba(139, 92, 246, 0.2);">
+          <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--primary);">Dispatch Logistics</h3>
+          <form id="distributeForm">
+            <input type="hidden" id="distribute-qr" />
+
+            <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+              <div class="form-group" style="margin:0">
+                <label>Resource Type</label>
+                <select id="items" required>
+                  <option value="Food Package">Food Package</option>
+                  <option value="Water Supplies">Water Supplies</option>
+                  <option value="Medical Kit">Medical Kit</option>
+                  <option value="Clothing">Clothing</option>
+                  <option value="Emergency Shelter">Emergency Shelter</option>
+                  <option value="Hygiene Kit">Hygiene Kit</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label>Target Zone</label>
+                <select id="region" required>
+                  <option value="North Zone">North Zone</option>
+                  <option value="South Zone">South Zone</option>
+                  <option value="East Zone">East Zone</option>
+                  <option value="West Zone">West Zone</option>
+                  <option value="Central Zone">Central Zone</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Field Notes (Optional)</label>
+              <input type="text" id="notes" placeholder="Special requirements or observations..." />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; height: 3.5rem; font-size: 1.1rem;">
+              Confirm Dispatch
+            </button>
+          </form>
+        </div>
       </section>
     </main>
 

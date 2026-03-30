@@ -2,58 +2,129 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beneficiary QR - Smart Relief</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Citizen ID - Smart Relief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <!-- QR Code generation for frontend if backend didn't send data URI, but we can also just use the backend generated link if we want, or generate it dynamically here. We'll use CDN for qrcode.js to draw it nicely on canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        .qr-card {
-            max-width: 400px;
-            margin: 0 auto;
-            text-align: center;
-            border: 2px solid var(--primary);
-            padding: 2rem;
-            border-radius: var(--radius);
-        }
-        #qrcode {
+        .qr-card-container {
             display: flex;
             justify-content: center;
-            margin: 1.5rem 0;
+            align-items: center;
+            padding: 2rem;
+            min-height: calc(100vh - 200px);
         }
-        #qrcode img {
-            border-radius: 8px;
+        .qr-card {
+            max-width: 450px;
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+            animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .qr-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 24px 24px 0 0;
+        }
+        #qrcode {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            display: inline-block;
+            margin: 2rem 0;
+            box-shadow: var(--shadow-sm);
+        }
+        #qrcode canvas, #qrcode img {
+            max-width: 100%;
+            height: auto !important;
         }
         .b-detail {
+            margin: 0.75rem 0;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+        .b-name {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, white 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin: 0.5rem 0;
-            font-size: 1.125rem;
         }
         
         @media print {
-            body * {
-                visibility: hidden;
+            body { 
+                background: white !important; 
+                margin: 0; padding: 0;
             }
-            .qr-card, .qr-card * {
-                visibility: visible;
+            .sidebar, .page-header, .no-print, .action-buttons { 
+                display: none !important; 
+            }
+            .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+            }
+            .qr-card-container {
+                padding: 0 !important;
+                min-height: auto;
+                background: white !important;
             }
             .qr-card {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                border: none;
+                visibility: visible;
+                position: relative;
+                margin: 20mm auto;
+                border: 2px solid #000 !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+                width: 86mm; /* Standard ID card width */
+                min-height: 54mm; /* Standard ID card height */
+                padding: 15mm 10mm;
+                border-radius: 10px;
+                display: block !important;
+                transform: none !important;
+                left: auto !important;
+                top: auto !important;
             }
-            .no-print {
-                display: none !important;
+            .qr-card * { visibility: visible; }
+            .qr-card::before { display: none; }
+            .b-name { 
+                -webkit-text-fill-color: black !important; 
+                color: black !important;
+                font-size: 24pt !important;
             }
+            .badge {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                background: none !important;
+            }
+            #qrcode {
+                border: 1px solid #eee;
+                padding: 5mm;
+            }
+        }
+        @media (max-width: 600px) {
+            .qr-card { padding: 1.5rem; }
+            .b-name { font-size: 1.5rem; }
+            .qr-card-container { padding: 1rem; }
+            #qrcode { padding: 1rem; }
         }
     </style>
 </head>
 <body>
     <aside class="sidebar no-print">
         <div class="sidebar-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Smart Relief
         </div>
         <nav class="sidebar-nav">
@@ -66,22 +137,28 @@
 
     <main class="main-content">
         <header class="page-header no-print">
-            <h1 class="page-title">Beneficiary QR ID</h1>
+            <h1 class="page-title">Identity Provisioned</h1>
         </header>
 
-        <section class="card qr-card" id="qrContainer">
-            <h2 id="b-name" style="margin-top: 0; color: var(--primary);">Loading...</h2>
-            <div class="b-detail" style="color: var(--text-muted);" id="b-id"></div>
-            
-            <div id="qrcode"></div>
-            
-            <div class="b-detail" id="b-phone"></div>
-            <div class="b-detail" id="b-address"></div>
-            <div class="b-detail">
-                Priority: <strong id="b-priority"></strong>
-            </div>
+        <section class="qr-card-container">
+            <div class="qr-card" id="qrContainer">
+                <span class="badge badge-medium" id="b-priority" style="margin-bottom: 1rem; display: inline-block;">Priority Level</span>
+                <h2 id="b-name" class="b-name">Loading Profile...</h2>
+                <div class="b-detail" id="b-id" style="font-family: monospace; letter-spacing: 1px;">XXXX-XXXX-XXXX</div>
+                
+                <div id="qrcode"></div>
+                
+                <div class="b-detail" id="b-phone">+0 000 000 0000</div>
+                <div class="b-detail" id="b-address" style="margin-top: 0.5rem; font-style: italic;">Location data pending...</div>
 
-            <button class="btn btn-secondary no-print" onclick="window.print()" style="margin-top: 2rem; width: 100%;">Print ID Card</button>
+                <div class="no-print action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="window.history.back()" style="flex: 1; min-width: 120px;">Back</button>
+                    <button class="btn btn-primary" onclick="window.print()" style="flex: 2; min-width: 200px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Digital ID
+                    </button>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -93,8 +170,8 @@
             const qrId = urlParams.get('qrId');
 
             if (!qrId) {
-                showMessage('error', 'No QR ID specified.');
-                document.getElementById('b-name').innerText = 'ID Not Found';
+                showMessage('error', 'No Identity Key detected.');
+                document.getElementById('b-name').innerText = 'Access Denied';
                 return;
             }
 
@@ -103,23 +180,26 @@
             if (response.success) {
                 const b = response.data;
                 document.getElementById('b-name').innerText = b.name;
-                document.getElementById('b-id').innerText = `ID: ${b.qrId}`;
-                document.getElementById('b-phone').innerText = `Phone: ${b.phone}`;
-                document.getElementById('b-address').innerText = `Loc: ${b.address}`;
-                document.getElementById('b-priority').innerText = b.priority;
+                document.getElementById('b-id').innerText = b.qrId;
+                document.getElementById('b-phone').innerText = b.phone;
+                document.getElementById('b-address').innerText = b.address;
+                document.getElementById('b-priority').innerText = `${b.priority} Priority`;
+                
+                const badge = document.getElementById('b-priority');
+                badge.className = `badge badge-${b.priority.toLowerCase()}`;
 
-                // Generate QR
+                // Generate High Resolution QR
                 new QRCode(document.getElementById("qrcode"), {
                     text: b.qrId,
                     width: 200,
                     height: 200,
-                    colorDark : "#1F2937",
+                    colorDark : "#0f172a",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
             } else {
-                showMessage('error', 'Beneficiary not found.');
-                document.getElementById('b-name').innerText = 'Beneficiary Not Found';
+                showMessage('error', 'Identity Synchronization Failed.');
+                document.getElementById('b-name').innerText = 'Profile Not Found';
             }
         });
     </script>

@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Beneficiary - Smart Relief</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Onboard Beneficiary - Smart Relief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Smart Relief
         </div>
         <nav class="sidebar-nav">
             <a href="index.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Dashboard</a>
-            <a href="register.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Register</a>
+            <a href="register.html" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Register</a>
             <a href="manage.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Manage IDs</a>
             <a href="scan.html" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01"/></svg> Scan QR</a>
         </nav>
@@ -23,43 +23,49 @@
 
     <main class="main-content">
         <header class="page-header">
-            <h1 class="page-title">Register Beneficiary</h1>
-            <p style="color: var(--text-muted)">Enter details to onboard a new beneficiary and generate their QR ID.</p>
+            <h1 class="page-title">Onboard Beneficiary</h1>
+            <p style="color: var(--text-muted)">Initialize a new digital identity for disaster-relief distribution.</p>
         </header>
 
-        <section class="card" style="max-width: 600px;">
+        <section class="card" style="max-width: 700px; margin: 0 auto;">
+            <header style="margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+                <h3 style="margin:0; font-size: 1.25rem;">Beneficiary Particulars</h3>
+            </header>
             <form id="registerForm">
                 <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" required placeholder="John Doe">
+                    <label for="name">Legal Full Name</label>
+                    <input type="text" id="name" required placeholder="e.g. Alexander Walker">
                 </div>
                 
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="age">Age</label>
-                        <input type="number" id="age" required placeholder="35">
+                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="margin:0">
+                        <label for="age">Current Age</label>
+                        <input type="number" id="age" required placeholder="Age">
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" required placeholder="+1 234 567 8900">
+                    <div class="form-group" style="margin:0">
+                        <label for="phone">Active Contact Number</label>
+                        <input type="tel" id="phone" required placeholder="+1 (000) 000-0000">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="address">Address / Location</label>
-                    <input type="text" id="address" required placeholder="Village Name, District">
+                    <label for="address">Primary Residential Location</label>
+                    <textarea id="address" required placeholder="District, Ward, House No." style="min-height: 100px; resize: vertical;"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="priority">Priority Tag</label>
+                    <label for="priority">Relief Priority Status</label>
                     <select id="priority">
-                        <option value="Low">Low</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="High">High</option>
+                        <option value="Low">Low - Stable condition</option>
+                        <option value="Medium" selected>Medium - Needs regular assistance</option>
+                        <option value="High">High - Emergency/Critical</option>
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Register & Generate QR</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; height: 3.5rem; font-size: 1.1rem; margin-top: 2rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                    Register & Provision QR
+                </button>
             </form>
         </section>
     </main>
@@ -71,8 +77,10 @@
             e.preventDefault();
             
             const submitBtn = e.target.querySelector('button');
+            const originalText = submitBtn.innerHTML;
+            
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Registering...';
+            submitBtn.innerText = 'Provisioning...';
 
             const data = {
                 name: document.getElementById('name').value,
@@ -85,15 +93,14 @@
             const response = await api.beneficiary.register(data);
             
             if (response.success) {
-                showMessage('success', 'Registration successful!');
-                // Redirect to QR display page
+                showMessage('success', 'Digital ID successfully provisioned.');
                 setTimeout(() => {
                     window.location.href = `qr.html?qrId=${response.data.beneficiary.qrId}`;
-                }, 1000);
+                }, 1200);
             } else {
-                showMessage('error', response.error || 'Failed to register');
+                showMessage('error', response.error || 'Provisioning failed.');
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Register & Generate QR';
+                submitBtn.innerHTML = originalText;
             }
         });
     </script>

@@ -9,6 +9,13 @@ function showMessage(type, text) {
 
   container.appendChild(toast);
 
+  // Audio feedback based on type
+  if (type === 'success') {
+    playSuccessSound();
+  } else if (type === 'error' || text.toLowerCase().includes('cooldown') || text.toLowerCase().includes('duplicate')) {
+    playErrorBeep();
+  }
+
   // Auto remove after 3s
   setTimeout(() => {
     toast.style.animation = 'fadeOut 0.3s ease forwards';
@@ -16,6 +23,62 @@ function showMessage(type, text) {
       toast.remove();
     }, 300);
   }, 3000);
+}
+
+function playErrorBeep() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sawtooth'; // Harsh sound for error
+    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); // Low frequency
+    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+
+    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.3);
+  } catch (err) {
+    console.error('Audio failed:', err);
+  }
+}
+
+function playSuccessSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // First tone
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    gain1.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc1.start(audioCtx.currentTime);
+    osc1.stop(audioCtx.currentTime + 0.3);
+
+    // Second tone (slightly delayed and higher)
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+    gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain2.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc2.start(audioCtx.currentTime + 0.1);
+    osc2.stop(audioCtx.currentTime + 0.4);
+  } catch (err) {
+    console.error('Audio failed:', err);
+  }
 }
 
 function createToastContainer() {
@@ -59,6 +122,7 @@ function checkAuthAndInjectUI() {
     }
 
     if (sidebar) {
+      const isMobile = window.innerWidth <= 768;
       const logoutLink = document.createElement("a");
       logoutLink.href = "#";
       logoutLink.className = "nav-link";
@@ -66,13 +130,19 @@ function checkAuthAndInjectUI() {
       logoutLink.onclick = logout;
       logoutLink.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout`;
 
-      let footer = sidebar.querySelector(".sidebar-footer");
-      if (!footer) {
-        footer = document.createElement("div");
-        footer.className = "sidebar-footer";
-        sidebar.appendChild(footer);
+      if (isMobile && nav) {
+        // Add to mobile bottom nav
+        nav.appendChild(logoutLink);
+      } else {
+        // Standard sidebar footer
+        let footer = sidebar.querySelector(".sidebar-footer");
+        if (!footer) {
+          footer = document.createElement("div");
+          footer.className = "sidebar-footer";
+          sidebar.appendChild(footer);
+        }
+        footer.appendChild(logoutLink);
       }
-      footer.appendChild(logoutLink);
   }
 }
 

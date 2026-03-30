@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage IDs - Smart Relief</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Directory - Smart Relief</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -12,42 +12,91 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 2000;
             align-items: center; justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.3s ease;
         }
         .modal-content {
             background: var(--surface);
             border: 1px solid var(--border);
-            padding: 2rem; border-radius: var(--radius);
-            width: 100%; max-width: 600px;
+            padding: 2.5rem; border-radius: 20px;
+            width: 100%; max-width: 650px;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .close-btn { cursor: pointer; font-size: 2rem; line-height: 1; color: var(--text-muted); transition: color 0.3s; }
-        .close-btn:hover { color: var(--danger); }
+        .close-btn { 
+            cursor: pointer; 
+            width: 32px; height: 32px; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted); 
+            transition: var(--transition); 
+        }
+        .close-btn:hover { background: var(--danger); color: white; transform: rotate(90deg); }
+        
         .timeline-item {
             border-left: 2px solid var(--primary);
-            padding-left: 1.5rem;
+            padding-left: 2rem;
             position: relative;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            animation: slideInRight 0.5s ease backwards;
         }
         .timeline-item::before {
-            content: ''; position: absolute; left: -7px; top: 0;
-            width: 12px; height: 12px; border-radius: 50%;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--primary);
+            content: ''; position: absolute; left: -9px; top: 0;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--bg-color);
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 15px var(--primary);
         }
         .timeline-item.block { border-left-color: var(--danger); }
-        .timeline-item.block::before { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .timeline-item.block::before { border-color: var(--danger); box-shadow: 0 0 15px var(--danger); }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        
+        .loading {
+            width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Search & Filter Optimized Styles */
+        .search-filter-controls {
+            display: flex; gap: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap;
+        }
+        .search-wrapper {
+            position: relative; flex: 1; min-width: 250px;
+        }
+        .search-icon {
+            position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);
+        }
+        .search-wrapper input { padding-left: 3rem; padding-right: 3rem; }
+        .clear-btn {
+            position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); font-size: 1.5rem;
+            cursor: pointer; padding: 0.2rem; line-height: 1; display: none;
+        }
+        .filter-wrapper { width: 220px; }
+        .search-submit-btn { padding: 0 1.5rem; }
+
+        @media (max-width: 768px) {
+            .search-filter-controls { flex-direction: column; gap: 0.75rem; }
+            .search-wrapper, .filter-wrapper { width: 100%; min-width: 0; }
+            .search-submit-btn { width: 100%; height: 3.5rem; }
+        }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Smart Relief
         </div>
         <nav class="sidebar-nav">
@@ -61,38 +110,42 @@
     <main class="main-content">
         <header class="page-header">
             <h1 class="page-title">Directory</h1>
-            <p style="color: var(--text-muted)">Search and investigate beneficiary footprints.</p>
+            <p style="color: var(--text-muted)">Search and investigate beneficiary footprints across all zones.</p>
         </header>
 
-        <section class="card">
-            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 250px;">
-                    <input type="text" id="searchInput" placeholder="Search by name or QR ID...">
+        <section class="card" style="margin-top: 3.5rem;">
+            <div class="search-filter-controls">
+                <div class="search-wrapper">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search name or ID..." autocomplete="off">
+                    <button id="clearSearch" class="clear-btn" title="Clear Search">&times;</button>
                 </div>
-                <div style="width: 200px;">
+                <div class="filter-wrapper">
                     <select id="priorityFilter">
-                        <option value="All">All Priorities</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
+                        <option value="All">All Tiers</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" id="searchBtn">Refresh</button>
+                <button class="btn btn-secondary search-submit-btn" id="searchBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </button>
             </div>
 
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Priority</th>
+                            <th>Identity</th>
+                            <th>Reference Contact</th>
+                            <th>Zone / Address</th>
+                            <th>Status Tier</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                        <tr><td colspan="5" style="text-align: center; padding: 4rem;">Initializing secure connection...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -100,54 +153,54 @@
     </main>
 
     <!-- Edit Modal -->
-    <div class="modal" id="editModal">
+    <div class="modal" id="editModal" onclick="if(event.target === this) closeModal('editModal')">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="margin:0;">Edit Beneficiary</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--primary);">Update Profile</h2>
                 <div class="close-btn" onclick="closeModal('editModal')">&times;</div>
             </div>
             <form id="editForm">
                 <input type="hidden" id="edit-qrId">
                 <div class="form-group">
-                    <label>Full Name</label>
+                    <label>Assigned Name</label>
                     <input type="text" id="edit-name" required>
                 </div>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <div class="form-group" style="flex: 1;">
-                        <label>Age</label>
+                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Vital Age</label>
                         <input type="number" id="edit-age" required>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>Phone</label>
+                    <div class="form-group" style="margin:0;">
+                        <label>Contact Phone</label>
                         <input type="tel" id="edit-phone" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Address</label>
+                    <label>Registered Address</label>
                     <input type="text" id="edit-address" required>
                 </div>
                 <div class="form-group">
-                    <label>Priority Tag</label>
+                    <label>Criticality Tier</label>
                     <select id="edit-priority">
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; height: 3.5rem;">Save Profile Changes</button>
             </form>
         </div>
     </div>
 
     <!-- Timeline Modal -->
-    <div class="modal" id="timelineModal">
-        <div class="modal-content">
+    <div class="modal" id="timelineModal" onclick="if(event.target === this) closeModal('timelineModal')">
+        <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
-                <h2 style="margin:0;">Operation Footprint</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--secondary);">Citizen Footprint</h2>
                 <div class="close-btn" onclick="closeModal('timelineModal')">&times;</div>
             </div>
-            <div id="timelineContainer">
-                <p>Loading historical records...</p>
+            <div id="timelineContainer" style="padding: 1rem 0;">
+                <p style="text-align: center; color: var(--text-muted);">Retrieving historical operation signals...</p>
             </div>
         </div>
     </div>
@@ -155,134 +208,196 @@
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script>
-        const tableBody = document.getElementById('tableBody');
-        let currentData = [];
+        (function() {
+            const tableBody = document.getElementById('tableBody');
+            let currentData = [];
 
-        async function loadData() {
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
-            const search = document.getElementById('searchInput').value;
-            const priority = document.getElementById('priorityFilter').value;
-            let query = `?search=${encodeURIComponent(search)}&priority=${encodeURIComponent(priority)}`;
-            
-            const response = await api.beneficiary.list(query);
-            tableBody.innerHTML = '';
-            
-            if (response.success) {
-                currentData = response.data;
-                if (currentData.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No beneficiaries found.</td></tr>';
+            async function loadData() {
+                if (!tableBody) return;
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding:4rem;">Syncing records...</td></tr>';
+                const searchInput = document.getElementById('searchInput');
+                const priorityFilter = document.getElementById('priorityFilter');
+                if (!searchInput || !priorityFilter) return;
+
+                const search = searchInput.value;
+                const priority = priorityFilter.value;
+                let query = `?search=${encodeURIComponent(search)}&priority=${encodeURIComponent(priority)}`;
+                
+                const response = await api.beneficiary.list(query);
+                tableBody.innerHTML = '';
+                
+                if (response.success) {
+                    currentData = response.data;
+                    if (currentData.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding:4rem; color:var(--text-muted);">No records match criteria.</td></tr>';
+                        return;
+                    }
+                    currentData.forEach(b => {
+                        const tr = document.createElement('tr');
+                        let badgeClass = b.priority === 'High' ? 'badge-high' : b.priority === 'Low' ? 'badge-low' : 'badge-medium';
+
+                        tr.innerHTML = `
+                            <td data-label="Identity">
+                                <div style="font-weight: 700; color: white;">${b.name}</div>
+                                <small style="color:var(--text-muted); font-size: 0.7rem;">UID: ${b.qrId.slice(0,12)}...</small>
+                            </td>
+                            <td data-label="Reference Contact">${b.phone}</td>
+                            <td data-label="Zone / Address"><div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${b.address}</div></td>
+                            <td data-label="Status Tier"><span class="badge ${badgeClass}">${b.priority}</span></td>
+                            <td data-label="Actions">
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: nowrap; justify-content: flex-end; width: 100%;">
+                                    <button onclick="window.openTimeline('${b.qrId}')" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Timeline</button>
+                                    <button onclick="window.openEdit('${b.qrId}')" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Edit</button>
+                                    <a href="qr.html?qrId=${b.qrId}" class="btn btn-primary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">ID</a>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding:4rem; color: var(--danger);">Encrypted connection failed.</td></tr>';
+                }
+            }
+
+            window.openEdit = function(qrId) {
+                const b = currentData.find(x => x.qrId === qrId);
+                if(!b) return;
+                document.getElementById('edit-qrId').value = b.qrId;
+                document.getElementById('edit-name').value = b.name;
+                document.getElementById('edit-age').value = b.age;
+                document.getElementById('edit-phone').value = b.phone;
+                document.getElementById('edit-address').value = b.address;
+                document.getElementById('edit-priority').value = b.priority;
+                document.getElementById('editModal').style.display = 'flex';
+            };
+
+            window.openTimeline = async function(qrId) {
+                const container = document.getElementById('timelineContainer');
+                container.innerHTML = '<div style="text-align:center; padding: 2rem;"><div class="loading"></div><p style="margin-top:1rem; color:var(--text-muted);">Syncing logs...</p></div>';
+                document.getElementById('timelineModal').style.display = 'flex';
+
+                const res = await api.beneficiary.timeline(qrId);
+                if(!res.success) {
+                    container.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to acquire timeline data.</p>`;
                     return;
                 }
-                currentData.forEach(b => {
-                    const tr = document.createElement('tr');
-                    let badgeClass = b.priority === 'High' ? 'badge-high' : b.priority === 'Low' ? 'badge-low' : 'badge-medium';
 
-                    tr.innerHTML = `
-                        <td><strong>${b.name}</strong><br><small style="color:var(--text-muted)">Age: ${b.age}</small></td>
-                        <td>${b.phone}</td>
-                        <td>${b.address}</td>
-                        <td><span class="badge ${badgeClass}">${b.priority}</span></td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button onclick="openTimeline('${b.qrId}')" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Timeline</button>
-                                <button onclick="openEdit('${b.qrId}')" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Edit</button>
-                                <a href="qr.html?qrId=${b.qrId}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">QR</a>
-                            </div>
-                        </td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
-            } else {
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Failed to load data.</td></tr>';
-            }
-        }
-
-        function openEdit(qrId) {
-            const b = currentData.find(x => x.qrId === qrId);
-            if(!b) return;
-            document.getElementById('edit-qrId').value = b.qrId;
-            document.getElementById('edit-name').value = b.name;
-            document.getElementById('edit-age').value = b.age;
-            document.getElementById('edit-phone').value = b.phone;
-            document.getElementById('edit-address').value = b.address;
-            document.getElementById('edit-priority').value = b.priority;
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        async function openTimeline(qrId) {
-            const container = document.getElementById('timelineContainer');
-            container.innerHTML = '<p>Loading records...</p>';
-            document.getElementById('timelineModal').style.display = 'flex';
-
-            const res = await api.beneficiary.timeline(qrId);
-            if(!res.success) {
-                container.innerHTML = `<p style="color:var(--danger)">Failed to load timeline.</p>`;
-                return;
-            }
-
-            if(res.data.length === 0) {
-                container.innerHTML = `<p style="color:var(--text-muted)">No operation history recorded for this individual yet.</p>`;
-                return;
-            }
-
-            let html = '';
-            res.data.forEach(item => {
-                const dateRaw = new Date(item.time);
-                const isBlock = item.type === 'Security Block';
-                html += `
-                    <div class="timeline-item ${isBlock ? 'block' : ''}">
-                        <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.25rem;">
-                            ${dateRaw.toLocaleDateString()} at ${dateRaw.toLocaleTimeString()}
+                if(res.data.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem 1rem;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:1rem; opacity:0.5;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            <p style="color:var(--text-muted);">No operational signals recorded for this citizen.</p>
                         </div>
-                        <strong style="color: ${isBlock ? 'var(--danger)' : 'var(--main-text)'}; font-size: 1.1rem; display:block;">
-                            ${item.type}
-                        </strong>
-                        <p style="margin: 0.5rem 0 0; color: var(--text-muted);">
-                            ${isBlock 
-                                ? `${item.action} — ${item.message}`
-                                : `Dispatched <strong style="color:var(--primary)">${item.items}</strong> across zone: <span class="badge badge-medium">${item.region}</span>`
-                            }
-                        </p>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
+                    `;
+                    return;
+                }
 
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        document.getElementById('editForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const qrId = document.getElementById('edit-qrId').value;
-            const data = {
-                name: document.getElementById('edit-name').value,
-                age: document.getElementById('edit-age').value,
-                phone: document.getElementById('edit-phone').value,
-                address: document.getElementById('edit-address').value,
-                priority: document.getElementById('edit-priority').value
+                let html = '';
+                res.data.forEach(item => {
+                    const dateRaw = new Date(item.time);
+                    const isBlock = item.type === 'Security Block';
+                    html += `
+                        <div class="timeline-item ${isBlock ? 'block' : ''}">
+                            <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem; font-weight: 500;">
+                                ${dateRaw.toLocaleDateString()} — ${dateRaw.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                            <div style="color: ${isBlock ? 'var(--danger)' : 'white'}; font-weight: 700; font-size: 1rem;">
+                                ${item.type}
+                            </div>
+                            <p style="margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                                ${isBlock 
+                                    ? `<span style="color:var(--danger)">Suspicious activity:</span> ${item.message}`
+                                    : `Dispatched <strong style="color:var(--primary)">${item.items}</strong> to <span style="color:var(--text-main)">${item.region}</span>`
+                                }
+                            </p>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
             };
-            
-            const btn = e.target.querySelector('button');
-            btn.disabled = true;
-            const res = await api.beneficiary.update(qrId, data);
-            btn.disabled = false;
-            
-            if(res.success) {
-                showMessage('success', 'Updated Successfully');
-                closeModal('editModal');
+
+            window.closeModal = function(id) {
+                document.getElementById(id).style.display = 'none';
+            };
+
+            document.getElementById('editForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const qrId = document.getElementById('edit-qrId').value;
+                const data = {
+                    name: document.getElementById('edit-name').value,
+                    age: document.getElementById('edit-age').value,
+                    phone: document.getElementById('edit-phone').value,
+                    address: document.getElementById('edit-address').value,
+                    priority: document.getElementById('edit-priority').value
+                };
+                
+                const btn = e.target.querySelector('button');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerText = 'Syncing...';
+                
+                const res = await api.beneficiary.update(qrId, data);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                
+                if(res.success) {
+                    showMessage('success', 'Master profile synchronized successfully.');
+                    window.closeModal('editModal');
+                    loadData();
+                } else {
+                    showMessage('error', res.error || 'Synchronization failed.');
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const searchInput = document.getElementById('searchInput');
+                const clearSearch = document.getElementById('clearSearch');
+                const priorityFilter = document.getElementById('priorityFilter');
+                const searchBtn = document.getElementById('searchBtn');
+
+                const updateClearBtn = () => {
+                    if (clearSearch) {
+                        clearSearch.style.display = searchInput.value ? 'block' : 'none';
+                    }
+                };
+
+                let searchTimeout;
+                if (searchInput) {
+                    searchInput.addEventListener('input', () => {
+                        updateClearBtn();
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(loadData, 400);
+                    });
+                    
+                    searchInput.addEventListener('keyup', (e) => {
+                        if (e.key === 'Enter') {
+                            clearTimeout(searchTimeout);
+                            loadData();
+                        }
+                    });
+                }
+
+                if (clearSearch) {
+                    clearSearch.addEventListener('click', () => {
+                        searchInput.value = '';
+                        updateClearBtn();
+                        loadData();
+                        searchInput.focus();
+                    });
+                }
+
+                if (priorityFilter) {
+                    priorityFilter.addEventListener('change', loadData);
+                }
+
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', loadData);
+                }
+
+                // Initial load
                 loadData();
-            } else {
-                showMessage('error', res.error || 'Update failed');
-            }
-        });
-
-        document.getElementById('searchInput').addEventListener('keyup', (e) => { if(e.key === 'Enter') loadData(); });
-        document.getElementById('priorityFilter').addEventListener('change', loadData);
-        document.getElementById('searchBtn').addEventListener('click', loadData);
-
-        document.addEventListener('DOMContentLoaded', loadData);
+            });
+        })();
     </script>
 </body>
 </html>
