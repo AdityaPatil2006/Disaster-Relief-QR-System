@@ -248,6 +248,7 @@
                                 <div style="display: flex; gap: 0.5rem; flex-wrap: nowrap; justify-content: flex-end; width: 100%;">
                                     <button onclick="window.openTimeline('${b.qrId}')" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Timeline</button>
                                     <button onclick="window.openEdit('${b.qrId}')" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Edit</button>
+                                    <button onclick="window.deleteBeneficiary('${b.qrId}')" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">Delete</button>
                                     <a href="qr.html?qrId=${b.qrId}" class="btn btn-primary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">ID</a>
                                 </div>
                             </td>
@@ -269,6 +270,18 @@
                 document.getElementById('edit-address').value = b.address;
                 document.getElementById('edit-priority').value = b.priority;
                 document.getElementById('editModal').style.display = 'flex';
+            };
+
+            window.deleteBeneficiary = async function(qrId) {
+                if (!confirm('CRITICAL ACTION: Are you sure you want to permanently revoke this digital identity and delete all associated biometric data?')) return;
+                
+                const response = await api.beneficiary.delete(qrId);
+                if (response.success) {
+                    showMessage('success', 'Identity purged from master registry.');
+                    loadData();
+                } else {
+                    showMessage('error', response.error || 'Failed to delete record.');
+                }
             };
 
             window.openTimeline = async function(qrId) {

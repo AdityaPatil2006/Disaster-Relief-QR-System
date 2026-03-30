@@ -25,17 +25,29 @@ function showMessage(type, text) {
   }, 3000);
 }
 
+let globalAudioCtx = null;
+
+function unlockAudio() {
+  if (!globalAudioCtx) {
+    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume();
+  }
+}
+
 function playErrorBeep() {
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    unlockAudio();
+    const audioCtx = globalAudioCtx;
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 
-    oscillator.type = 'sawtooth'; // Harsh sound for error
-    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); // Low frequency
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
 
     gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
@@ -50,27 +62,28 @@ function playErrorBeep() {
 
 function playSuccessSound() {
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    unlockAudio();
+    const audioCtx = globalAudioCtx;
     
-    // First tone
+    // Tone 1
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
     osc1.connect(gain1);
     gain1.connect(audioCtx.destination);
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime);
     gain1.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
     osc1.start(audioCtx.currentTime);
     osc1.stop(audioCtx.currentTime + 0.3);
 
-    // Second tone (slightly delayed and higher)
+    // Tone 2
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
     osc2.connect(gain2);
     gain2.connect(audioCtx.destination);
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+    osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
     gain2.gain.setValueAtTime(0, audioCtx.currentTime);
     gain2.gain.setValueAtTime(0.2, audioCtx.currentTime + 0.1);
     gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);

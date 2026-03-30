@@ -9,7 +9,7 @@ const router = express.Router();
 // Add new beneficiary, prevent duplicate, generate QR
 router.post('/register', async (req, res) => {
   try {
-    const { name, age, address, phone, priority } = req.body;
+    const { name, age, address, phone, priority, facePhoto } = req.body;
 
     // Check for existing duplicate (handled partly by DB index, but good to check explicitly)
     const existing = await Beneficiary.findOne({ name, phone });
@@ -27,6 +27,7 @@ router.post('/register', async (req, res) => {
       address,
       phone,
       qrId,
+      facePhoto,
       priority: priority || 'Medium'
     });
 
@@ -104,10 +105,10 @@ router.get('/stats/dashboard', async (req, res) => {
 // PUT /api/beneficiary/:qrId (Edit)
 router.put('/:qrId', async (req, res) => {
   try {
-    const { name, age, address, phone, priority } = req.body;
+    const { name, age, address, phone, priority, facePhoto } = req.body;
     const beneficiary = await Beneficiary.findOneAndUpdate(
       { qrId: req.params.qrId },
-      { name, age, address, phone, priority },
+      { name, age, address, phone, priority, facePhoto },
       { new: true }
     );
     if (!beneficiary) return res.status(404).json({ error: 'Beneficiary not found.' });

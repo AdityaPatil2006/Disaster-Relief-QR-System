@@ -31,6 +31,7 @@
     }
 
     async function startScanner() {
+        unlockAudio(); // Unlock audio context on UI interaction
         if (!selectedDeviceId) await init();
         if (!selectedDeviceId) return;
 
@@ -68,26 +69,124 @@
         startScanner();
     }
 
+    // Biometric Logic
+    const bioModal = document.getElementById('bioModal');
+    const bioVideo = document.getElementById('face-match-video');
+    const bioStatus = document.getElementById('bio-status');
+    const bioActions = document.getElementById('bio-actions');
+    const matchOverlay = document.getElementById('match-overlay');
+    
+    let currentBeneficiary = null;
+    let bioStream = null;
+    let isProcessing = false; // Flag to prevent re-triggering while a session is active
+
     async function verifyBeneficiary(qrId) {
-        if (!qrId) return;
+        if (!qrId || isProcessing) return;
+        isProcessing = true;
+        
         showMessage('warning', 'Validating digital identity...');
         
         const res = await api.beneficiary.get(qrId);
         if (res.success) {
-            const b = res.data;
-            document.getElementById('b-name').innerText = b.name;
-            document.getElementById('b-age').innerText = b.age;
-            document.getElementById('b-phone').innerText = b.phone;
-            document.getElementById('b-address').innerText = b.address;
-            document.getElementById('b-priority').innerText = b.priority;
-            document.getElementById('b-priority').className = `badge badge-${b.priority.toLowerCase()}`;
-            document.getElementById('distribute-qr').value = b.qrId;
+            currentBeneficiary = res.data;
             
-            infoSection.style.display = 'block';
-            infoSection.scrollIntoView({ behavior: 'smooth' });
-            showMessage('success', 'Identity Verified.');
+            if (currentBeneficiary.facePhoto) {
+                startBiometricCheck();
+            } else {
+                showBeneficiaryInfo();
+            }
         } else {
+            isProcessing = false;
             showMessage('error', res.error || 'Identity not found in database.');
+        }
+    }
+
+    async function startBiometricCheck() {
+        bioModal.style.display = 'flex';
+        bioStatus.innerText = 'Initializing Face-ID Engine...';
+        bioStatus.className = 'verification-status scanning';
+        bioActions.style.display = 'none';
+        matchOverlay.classList.remove('active');
+        matchOverlay.classList.remove('fail');
+
+        try {
+            bioStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" } 
+            });
+            bioVideo.srcObject = bioStream;
+            
+            Biometrics.startVerification(currentBeneficiary.facePhoto, bioVideo, (result) => {
+                if (result.success) {
+                    bioStatus.innerText = 'Face MATCHED: Identity Confirmed';
+                    bioStatus.className = 'verification-status success';
+                    matchOverlay.classList.remove('fail');
+                    matchOverlay.classList.add('active');
+                    playSuccessSound();
+                    
+                    setTimeout(() => {
+                        closeBioModal();
+                        showBeneficiaryInfo();
+                    }, 1500);
+                } else {
+                    bioStatus.innerText = `SECURITY BLOCK: ${result.error}`;
+                    bioStatus.className = 'verification-status fail';
+                    matchOverlay.classList.remove('active');
+                    matchOverlay.classList.add('fail');
+                    bioActions.style.display = 'flex';
+                    playErrorBeep();
+                }
+            });
+        } catch (err) {
+            console.error('Bio failure:', err);
+            bioStatus.innerText = 'Biometric Hardware Error';
+            bioActions.style.display = 'flex';
+        }
+    }
+
+    async function showBeneficiaryInfo() {
+        // Clear previous session evidence visuals
+        document.getElementById('photo-container').style.display = 'none';
+        document.getElementById('beneficiary-photo').src = '';
+        
+        const b = currentBeneficiary;
+        document.getElementById('b-name').innerText = b.name;
+        document.getElementById('b-age').innerText = b.age;
+        document.getElementById('b-phone').innerText = b.phone;
+        document.getElementById('b-address').innerText = b.address;
+        document.getElementById('b-priority').innerText = b.priority;
+        document.getElementById('b-priority').className = `badge badge-${b.priority.toLowerCase()}`;
+        document.getElementById('distribute-qr').value = b.qrId;
+        
+        infoSection.style.display = 'block';
+        infoSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Start Back Camera STREAM ONLY (wait for user to click 'Capture')
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment", width: 1280, height: 720 } 
+            });
+            videoElement.srcObject = stream;
+        } catch (err) {
+            console.error("Failed to start evidence camera:", err);
+        }
+    }
+
+    window.retryFaceMatch = () => {
+        matchOverlay.classList.remove('fail');
+        startBiometricCheck();
+    };
+
+    window.cancelDispatch = () => {
+        closeBioModal();
+        isProcessing = false;
+        showMessage('error', 'Security Alert: Biometric Mismatch Logged.');
+    };
+
+    function closeBioModal() {
+        bioModal.style.display = 'none';
+        if (bioStream) {
+            bioStream.getTracks().forEach(track => track.stop());
+            bioStream = null;
         }
     }
 
@@ -105,30 +204,31 @@
         const region = document.getElementById('region').value;
         const notes = document.getElementById('notes').value;
 
-        // Wrap the single item selection in an array for the backend
         const items = [item];
 
         const btn = e.target.querySelector('button');
+        const originalText = btn.innerText;
         btn.disabled = true;
         btn.innerText = 'Synchronizing Dispatch...';
 
         const res = await api.aid.distribute({ qrId, items, region, notes });
         btn.disabled = false;
-        btn.innerText = 'Confirm Dispatch';
+        btn.innerText = originalText;
 
         if (res.success) {
             showMessage('success', 'Distribution logged and synchronized.');
             infoSection.style.display = 'none';
             document.getElementById('manual-qr').value = '';
+            playSuccessSound();
+            isProcessing = false; // Reset session
         } else {
-            // Error message will automatically trigger beep in ui.js
             showMessage('error', res.error || 'Distribution protocol failed.');
         }
     });
 
     window.capturePhoto = function() {
         const canvas = document.getElementById('qr-canvas');
-        const video = document.getElementById('qr-video');
+        const video = videoElement; // Correct reference to back camera
         if (!video.srcObject) return showMessage('error', 'Camera is not active.');
         
         canvas.width = video.videoWidth;
@@ -145,6 +245,7 @@
     stopBtn.addEventListener('click', stopScanner);
     switchBtn.addEventListener('click', switchCamera);
 
-    // Initial check
+    // Initial check & Pre-load models
     init();
+    Biometrics.loadModels();
 })();

@@ -6,6 +6,7 @@ const beneficiarySchema = new mongoose.Schema({
   address: { type: String, required: true },
   phone: { type: String, required: true },
   qrId: { type: String, required: true, unique: true },
+  facePhoto: { type: String }, // Base64 data for comparison
   priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
   createdAt: { type: Date, default: Date.now }
 });
