@@ -93,9 +93,12 @@ async function seedData() {
     for (let i = 0; i < 5; i++) {
         const start = Date.now() - (7 * 24 * 60 * 60 * 1000);
         const end = Date.now();
+        const randomB = getRandom(savedBeneficiaries);
+        
         auditLogs.push(new AuditLog({
+            beneficiaryQR: randomB.qrId,
             action: 'Duplicate Aid Blocked',
-            details: `QR ID ${getRandom(savedBeneficiaries).qrId} attempted back-to-back scan. Automatically blocked by system.`,
+            message: `QR ID ${randomB.qrId} attempted back-to-back scan. Automatically blocked by system.`,
             timestamp: new Date(start + Math.random() * (end - start))
         }));
     }
