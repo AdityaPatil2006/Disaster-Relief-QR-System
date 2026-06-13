@@ -187,5 +187,6 @@ GitHub: https://github.com/AdityaPatil2006
 
 If you found this project useful, consider giving it a star on GitHub.
 
+---
 
 Developed to improve transparency, accountability, and efficiency in disaster relief operations through secure digital verification and centralized resource management.
